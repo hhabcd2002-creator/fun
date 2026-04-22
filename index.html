@@ -4,16 +4,16 @@ function doPost(e) {
   var data = JSON.parse(e.postData.contents);
   var rows = sheet.getDataRange().getValues();
 
-  // --- Sign Up ---
+  // --- Sign Up (အကောင့်သစ်ဖွင့်ခြင်း) ---
   if (data.action == "signup") {
     for (var i = 1; i < rows.length; i++) {
       if (rows[i][0] == data.username) return ContentService.createTextOutput("User Exists");
     }
-    sheet.appendRow([data.username, data.password, 0]);
+    sheet.appendRow([data.username, data.password, 0]); // username, password, gold
     return ContentService.createTextOutput("Success");
   }
 
-  // --- Sign In ---
+  // --- Sign In (အကောင့်ဝင်ခြင်း) ---
   if (data.action == "signin") {
     for (var i = 1; i < rows.length; i++) {
       if (rows[i][0] == data.username && rows[i][1] == data.password) {
@@ -24,7 +24,7 @@ function doPost(e) {
     return ContentService.createTextOutput("Wrong Credentials");
   }
 
-  // --- Update Gold ---
+  // --- Update Gold (Gold ပမာဏ သိမ်းဆည်းခြင်း) ---
   if (data.action == "updateGold") {
     for (var i = 1; i < rows.length; i++) {
       if (rows[i][0] == data.username) {
