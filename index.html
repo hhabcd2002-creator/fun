@@ -1,36 +1,184 @@
-function doPost(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheets()[0];
-  var data = JSON.parse(e.postData.contents);
-  var rows = sheet.getDataRange().getValues();
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paradise - Cloud Project</title>
+    <style>
+        :root {
+            --blue: #5a73a3;
+            --glass: rgba(255, 255, 255, 0.6);
+            --bg: #f0f4f8;
+        }
 
-  // --- Sign Up (အကောင့်သစ်ဖွင့်ခြင်း) ---
-  if (data.action == "signup") {
-    for (var i = 1; i < rows.length; i++) {
-      if (rows[i][0] == data.username) return ContentService.createTextOutput("User Exists");
-    }
-    sheet.appendRow([data.username, data.password, 0]); // username, password, gold
-    return ContentService.createTextOutput("Success");
-  }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', 'Pyidaungsu', sans-serif; }
 
-  // --- Sign In (အကောင့်ဝင်ခြင်း) ---
-  if (data.action == "signin") {
-    for (var i = 1; i < rows.length; i++) {
-      if (rows[i][0] == data.username && rows[i][1] == data.password) {
-        var userObj = { username: rows[i][0], gold: rows[i][2] };
-        return ContentService.createTextOutput(JSON.stringify(userObj));
-      }
-    }
-    return ContentService.createTextOutput("Wrong Credentials");
-  }
+        body {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 50%, #fff9f0 100%);
+            min-height: 100vh; display: flex; justify-content: center; align-items: center; color: #444;
+        }
 
-  // --- Update Gold (Gold ပမာဏ သိမ်းဆည်းခြင်း) ---
-  if (data.action == "updateGold") {
-    for (var i = 1; i < rows.length; i++) {
-      if (rows[i][0] == data.username) {
-        sheet.getRange(i + 1, 3).setValue(data.gold);
-        return ContentService.createTextOutput("Updated");
-      }
-    }
-  }
-}
+        /* Gold UI */
+        #gold-bar { 
+            position: fixed; top: 15px; right: 15px; background: var(--glass);
+            padding: 10px 20px; border-radius: 25px; font-weight: bold;
+            color: #b8860b; border: 1px solid white; backdrop-filter: blur(10px); display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Login Card */
+        .auth-card {
+            background: white; padding: 40px; border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1); width: 90%; max-width: 380px; text-align: center;
+        }
+
+        .loading { opacity: 0.6; pointer-events: none; }
+
+        h2 { color: var(--blue); margin-bottom: 25px; }
+        input { 
+            width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #eee; 
+            border-radius: 15px; outline: none; background: #f9f9f9; font-size: 1rem;
+        }
+        button { 
+            width: 100%; padding: 15px; border: none; border-radius: 15px; 
+            background: var(--blue); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s;
+        }
+
+        /* Home Dashboard */
+        #dashboard { display: none; width: 95%; max-width: 600px; text-align: center; }
+        .welcome-box { background: var(--glass); padding: 40px; border-radius: 30px; border: 1px solid white; backdrop-filter: blur(10px); }
+
+        .game-btn { background: white; color: var(--blue); margin-top: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+
+        /* Notification */
+        #notify { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: #2ecc71; color: white; padding: 12px 30px; border-radius: 50px; transition: 0.5s; z-index: 9999; font-weight: bold; }
+        #notify.show { top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div id="notify">အောင်မြင်ပါသည် ✨</div>
+    <div id="gold-bar">✨🪙 Gold: <span id="gold-val">0</span></div>
+
+    <div id="auth-section" class="auth-card">
+        <h2 id="auth-title">Sign In</h2>
+        <input type="text" id="user-in" placeholder="Username">
+        <input type="password" id="pass-in" placeholder="Password">
+        <button id="auth-btn" onclick="handleAuth()">Sign In</button>
+        <p style="font-size: 0.85rem; margin-top: 20px; color: #666;">
+            <span id="toggle-text">အကောင့်မရှိသေးဘူးလား?</span> 
+            <b style="color: var(--blue); cursor: pointer;" onclick="toggleAuth()">Sign Up</b>
+        </p>
+    </div>
+
+    <div id="dashboard">
+        <div class="welcome-box">
+            <h1 id="greet-user" style="color: var(--blue);">မင်္ဂလာပါ</h1>
+            <p style="margin: 15px 0; color: #666;">သင်၏ အချက်အလက်များကို Google Sheet (Cloud) တွင် သိမ်းဆည်းထားပါသည်။</p>
+            
+            <div style="background: white; padding: 25px; border-radius: 20px; margin: 20px 0; border: 1px solid #eee;">
+                <p style="color: #e74c3c; font-weight: bold;">🎵 Music Player Status</p>
+                <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">ယခု Update တွင် မရရှိနိုင်သေးပါ။</p>
+            </div>
+
+            <button class="game-btn" onclick="playGame()">➕ Math Game ဆော့မည် (+20 Gold)</button>
+            <br><br>
+            <button onclick="location.reload()" style="background: #ff7675; width: auto; padding: 10px 30px;">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyiDKt0TCUryjvYeYyuBViLxrCmmkB0ZLnUVz0qMnt3G3uWJwlMA0a32_wYK94R7PZh/exec";
+        let isSignUp = false;
+        let currentUser = null;
+
+        function showNotify(msg) {
+            const n = document.getElementById('notify');
+            n.innerText = msg; n.classList.add('show');
+            setTimeout(() => n.classList.remove('show'), 3000);
+        }
+
+        function toggleAuth() {
+            isSignUp = !isSignUp;
+            document.getElementById('auth-title').innerText = isSignUp ? "Sign Up" : "Sign In";
+            document.getElementById('auth-btn').innerText = isSignUp ? "Create Account" : "Sign In";
+            document.getElementById('toggle-text').innerText = isSignUp ? "အကောင့်ရှိပြီးသားလား?" : "အကောင့်မရှိသေးဘူးလား?";
+        }
+
+        async function handleAuth() {
+            const user = document.getElementById('user-in').value.trim();
+            const pass = document.getElementById('pass-in').value.trim();
+            const btn = document.getElementById('auth-btn');
+
+            if(!user || !pass) return alert("အချက်အလက် ပြည့်စုံစွာ ဖြည့်ပါ");
+
+            document.getElementById('auth-section').classList.add('loading');
+            btn.innerText = "Connecting Cloud...";
+
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: isSignUp ? "signup" : "signin",
+                        username: user,
+                        password: pass
+                    })
+                });
+
+                const result = await response.text();
+
+                if (result === "Success") {
+                    showNotify("အကောင့်ဖွင့်ခြင်း အောင်မြင်သည် ✨");
+                    toggleAuth();
+                } else if (result === "User Exists") {
+                    alert("ဒီအမည်နဲ့ အကောင့်ရှိပြီးသားပါ။");
+                } else if (result === "Wrong Credentials") {
+                    alert("Username သို့မဟုတ် Password မှားယွင်းနေပါသည်။");
+                } else {
+                    currentUser = JSON.parse(result);
+                    renderDashboard();
+                    showNotify("ဝင်ရောက်မှု အောင်မြင်သည် ✨");
+                }
+            } catch (e) {
+                alert("Cloud Connection Error!");
+            } finally {
+                document.getElementById('auth-section').classList.remove('loading');
+                btn.innerText = isSignUp ? "Create Account" : "Sign In";
+            }
+        }
+
+        function renderDashboard() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('gold-bar').style.display = 'block';
+            document.getElementById('gold-val').innerText = currentUser.gold;
+            document.getElementById('greet-user').innerText = `မင်္ဂလာပါ ${currentUser.username}`;
+        }
+
+        async function updateCloudGold() {
+            await fetch(WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "updateGold",
+                    username: currentUser.username,
+                    gold: currentUser.gold
+                })
+            });
+        }
+
+        function playGame() {
+            let n1 = Math.floor(Math.random()*10);
+            let n2 = Math.floor(Math.random()*10);
+            let ans = prompt(`${n1} + ${n2} ဘယ်လောက်လဲ?`);
+            
+            if(ans == (n1+n2)) {
+                currentUser.gold += 20;
+                document.getElementById('gold-val').innerText = currentUser.gold;
+                showNotify("Gold +20 ရရှိပါပြီ ✨");
+                updateCloudGold(); 
+            } else {
+                alert("မှားသွားပါပြီ!");
+            }
+        }
+    </script>
+</body>
+</html>
