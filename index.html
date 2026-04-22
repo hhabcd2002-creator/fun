@@ -3,143 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paradise - Optimized Update</title>
+    <title>Paradise Cloud - Fixed</title>
     <style>
-        :root { --blue: #5a73a3; --glass: rgba(255, 255, 255, 0.7); }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pyidaungsu', sans-serif; }
-
-        body {
-            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 50%, #fff9f0 100%);
-            min-height: 100vh; display: flex; justify-content: center; align-items: center; color: #444;
-        }
-
-        .card { 
-            background: white; padding: 35px; border-radius: 30px; 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center;
-        }
-
-        input { 
-            width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #eee; 
-            border-radius: 15px; outline: none; background: #fdfdfd; font-size: 1rem;
-        }
-
-        button { 
-            width: 100%; padding: 15px; border: none; border-radius: 15px; 
-            background: var(--blue); color: white; font-weight: bold; cursor: pointer; margin-top: 10px;
-        }
-
-        #gold-bar { 
-            position: fixed; top: 15px; right: 15px; background: var(--glass);
-            padding: 10px 20px; border-radius: 25px; font-weight: bold;
-            color: #b8860b; border: 1px solid white; backdrop-filter: blur(10px);
-        }
-
-        /* Video Area Fix */
-        .msg-box { 
-            background: #fff5f5; border: 2px dashed #ff7675; 
-            padding: 25px 15px; border-radius: 20px; margin: 20px 0; 
-        }
-
-        #quiz-box { display: none; margin-top: 20px; background: #f0f7ff; padding: 20px; border-radius: 20px; }
+        :root { --main: #5a73a3; --bg: #f8f9fa; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pyidaungsu', 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 380px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; outline: none; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--main); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        #gold-display { position: fixed; top: 20px; right: 20px; background: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; display: none; border: 1px solid #ddd; }
+        .info-box { background: #fff0f0; border: 1px dashed #ff7675; padding: 15px; border-radius: 10px; margin: 15px 0; font-size: 0.85rem; color: #d63031; }
     </style>
 </head>
 <body>
 
-    <div id="gold-bar" style="display:none;">✨🪙 Gold: <span id="g-val">0</span></div>
+    <div id="gold-display">✨🪙 Gold: <span id="g-val">0</span></div>
 
     <div id="auth-box" class="card">
-        <h2 id="title" style="color: var(--blue); margin-bottom: 20px;">Sign In</h2>
+        <h2 id="title" style="color: var(--main); margin-bottom: 15px;">Sign In</h2>
         <input type="text" id="user" placeholder="Username">
         <input type="password" id="pass" placeholder="Password">
-        <button onclick="handleAuth()">ဝင်မည်</button>
-        <p style="margin-top: 15px; font-size: 0.85rem;">
-            <span id="t-text">အကောင့်မရှိသေးဘူးလား?</span> 
-            <b style="color: var(--blue); cursor: pointer;" onclick="toggle()">Sign Up</b>
+        <button id="btn" onclick="handleAuth()">Sign In</button>
+        <p style="font-size: 0.8rem; margin-top: 15px;">
+            <span id="toggle-text">အကောင့်မရှိသေးဘူးလား?</span> 
+            <b style="color: var(--main); cursor: pointer;" onclick="toggle()">Sign Up</b>
         </p>
     </div>
 
-    <div id="dashboard" class="card" style="display:none;">
-        <h2 id="welcome" style="color: var(--blue);"></h2>
-        
-        <div class="msg-box">
-            <p style="color: #d63031; font-weight: bold;">🎵 Music Player</p>
-            <p style="font-size: 0.85rem; color: #777; margin-top: 5px;">ယခု Update တွင် YouTube ဖွင့်၍မရသေးပါ။</p>
-        </div>
-
-        <button onclick="showQuiz()" style="background: #2ecc71;">➕ Math Quiz ဆော့မည်</button>
-
-        <div id="quiz-box">
-            <h3 id="ques-text" style="font-size: 1.5rem; margin-bottom: 10px;"></h3>
-            <input type="number" id="ans-in" placeholder="အဖြေရိုက်ပါ">
-            <button onclick="checkAns()" style="background: var(--blue);">အဖြေစစ်မည်</button>
-        </div>
-
+    <div id="home" class="card" style="display:none;">
+        <h2 id="welcome"></h2>
+        <div class="info-box">🎵 Music Player: ယခု Update တွင် မရသေးပါ</div>
+        <button onclick="playGame()" style="background: #2ecc71;">➕ Math Quiz (+20 Gold)</button>
         <button onclick="location.reload()" style="background: #ff7675; margin-top: 20px;">Logout</button>
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyyHlhz8S3cLy-Py-vYMdpKZXgbw7X-_yK3Yya-XwiSx8Hc2dXPrNHpOBTicVuzX-P0/exec";
+        const CLOUD_URL = "https://script.google.com/macros/s/AKfycbx7JnbP_3kKTiUuBSLxJqXTEtQjnXaXK_K1c0aOBy1ZjbRfOljpd80qMKL8MSAI_cAr/exec";
         let isSignUp = false;
-        let user = null;
-        let currentQues = { a: 0, b: 0, ans: 0 };
+        let currentUser = null;
 
         function toggle() {
             isSignUp = !isSignUp;
             document.getElementById('title').innerText = isSignUp ? "Sign Up" : "Sign In";
-            document.getElementById('t-text').innerText = isSignUp ? "အကောင့်ရှိပြီးသားလား?" : "အကောင့်မရှိသေးဘူးလား?";
+            document.getElementById('btn').innerText = isSignUp ? "Create Account" : "Sign In";
         }
 
         async function handleAuth() {
-            const u = document.getElementById('user').value;
-            const p = document.getElementById('pass').value;
-            if(!u || !p) return alert("ဖြည့်စွက်ပါ");
+            const u = document.getElementById('user').value.trim();
+            const p = document.getElementById('pass').value.trim();
+            if (!u || !p) return alert("ဖြည့်ပါ");
+
+            document.getElementById('btn').innerText = "Connecting...";
 
             try {
-                const res = await fetch(WEB_APP_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: isSignUp ? "signup" : "signin", username: u, password: p })
-                });
-                const data = await res.text();
+                // Cloud သို့ Data ပို့ခြင်း
+                if (isSignUp) {
+                    await fetch(CLOUD_URL, {
+                        method: "POST",
+                        mode: "no-cors",
+                        body: JSON.stringify({ action: "signup", username: u, password: p })
+                    });
+                    alert("အကောင့်ဖွင့်ရန် Cloud သို့ ပို့လိုက်ပါပြီ။ Sign In ပြန်ဝင်ကြည့်ပါ။");
+                    location.reload();
+                } else {
+                    // Sign In - Google Script က JSON ပြန်ပေးဖို့ GET method ကို သုံးပါမယ်
+                    const res = await fetch(`${CLOUD_URL}?action=signin&user=${u}&pass=${p}`);
+                    const data = await res.json();
 
-                if(data === "Success") { alert("အောင်မြင်သည်၊ Sign In ဝင်ပါ"); toggle(); }
-                else if(data === "Wrong Credentials") { alert("မှားယွင်းနေပါသည်"); }
-                else { user = JSON.parse(data); startApp(); }
-            } catch(e) { alert("Error connecting to Cloud"); }
+                    if (data === "Wrong") {
+                        alert("မှားယွင်းနေပါသည်။");
+                    } else {
+                        currentUser = data;
+                        showHome();
+                    }
+                }
+            } catch (e) {
+                alert("ချိတ်ဆက်မှု Error! Google Script မှာ 'Anyone' ကို ရွေးထားလား ပြန်စစ်ပါ။");
+            }
+            document.getElementById('btn').innerText = isSignUp ? "Create Account" : "Sign In";
         }
 
-        function startApp() {
+        function showHome() {
             document.getElementById('auth-box').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            document.getElementById('gold-bar').style.display = 'block';
-            document.getElementById('welcome').innerText = "မင်္ဂလာပါ " + user.username;
-            document.getElementById('g-val').innerText = user.gold;
+            document.getElementById('home').style.display = 'block';
+            document.getElementById('gold-display').style.display = 'block';
+            document.getElementById('welcome').innerText = "မင်္ဂလာပါ " + currentUser.username;
+            document.getElementById('g-val').innerText = currentUser.gold;
         }
 
-        // --- Math Quiz Logic ---
-        function showQuiz() {
-            document.getElementById('quiz-box').style.display = 'block';
-            currentQues.a = Math.floor(Math.random() * 10) + 1;
-            currentQues.b = Math.floor(Math.random() * 10) + 1;
-            currentQues.ans = currentQues.a + currentQues.b;
-            document.getElementById('ques-text').innerText = `${currentQues.a} + ${currentQues.b} = ?`;
-        }
-
-        async function checkAns() {
-            const val = document.getElementById('ans-in').value;
-            if(val == currentQues.ans) {
-                user.gold += 20;
-                document.getElementById('g-val').innerText = user.gold;
-                document.getElementById('ans-in').value = "";
-                alert("မှန်ကန်ပါသည်! Gold +20 ရပါပြီ ✨");
-                
-                // Cloud ပေါ်သို့ Gold သိမ်းမည်
-                fetch(WEB_APP_URL, {
+        function playGame() {
+            let n1 = Math.floor(Math.random() * 10);
+            let n2 = Math.floor(Math.random() * 10);
+            let ans = prompt(`${n1} + ${n2} ဘယ်လောက်လဲ?`);
+            if (ans == (n1 + n2)) {
+                currentUser.gold += 20;
+                document.getElementById('g-val').innerText = currentUser.gold;
+                // Gold update ကို Cloud မှာ သိမ်းမည်
+                fetch(CLOUD_URL, {
                     method: "POST",
-                    body: JSON.stringify({ action: "updateGold", username: user.username, gold: user.gold })
+                    mode: "no-cors",
+                    body: JSON.stringify({ action: "updateGold", username: currentUser.username, gold: currentUser.gold })
                 });
-                showQuiz();
-            } else {
-                alert("မှားသွားပါပြီ၊ ပြန်ကြိုးစားပါ!");
+                alert("မှန်ကန်ပါသည်! Gold +20 ✨");
             }
         }
     </script>
