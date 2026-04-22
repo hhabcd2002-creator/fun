@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paradise - Level Up</title>
+    <title>Paradise - Smart Search</title>
     <style>
         :root {
             --dreamy-blue: #a1c4fd;
@@ -20,177 +20,122 @@
         }
 
         /* Dashboards */
-        #coin-display { position: fixed; top: 15px; right: 15px; background: var(--glass); padding: 8px 15px; border-radius: 20px; font-weight: bold; color: #b8860b; border: 1px solid white; backdrop-filter: blur(10px); display: none; z-index: 1000; }
-        #achieve-btn { position: fixed; top: 15px; left: 15px; background: var(--glass); padding: 8px 15px; border-radius: 20px; font-weight: bold; color: var(--text-blue); cursor: pointer; border: 1px solid white; backdrop-filter: blur(5px); display: none; z-index: 1000; }
-        #cheat-btn { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; background: var(--glass); border-radius: 50%; display: none; justify-content: center; align-items: center; cursor: pointer; transition: 0.5s; z-index: 1000; border: 1px solid white; font-size: 1.5rem; }
-        #cheat-btn:hover { transform: rotate(90deg); background: var(--creamy-white); }
+        #coin-display { position: fixed; top: 15px; right: 15px; background: var(--glass); padding: 8px 15px; border-radius: 20px; font-weight: bold; color: #b8860b; border: 1px solid white; backdrop-filter: blur(10px); z-index: 1000; }
 
-        /* Lock Screen */
-        #lock-screen { position: fixed; inset: 0; background: #1a1a2e; display: flex; justify-content: center; align-items: center; z-index: 5000; }
-        .lock-box { background: white; padding: 40px; border-radius: 25px; text-align: center; width: 85%; max-width: 350px; }
-
-        /* Sections */
-        #main-menu { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
-        .menu-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 90%; max-width: 450px; margin-top: 30px; }
-        .menu-btn { background: var(--glass); border: 1px solid white; padding: 25px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-weight: bold; text-align: center; }
+        /* Search & Suggestions UI */
+        .search-container { position: relative; width: 100%; max-width: 500px; margin: 20px auto; }
         
-        .section { display: none; width: 95%; max-width: 700px; margin: 60px auto; text-align: center; }
-        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 20px; overflow: hidden; margin: 15px 0; background: #000; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        input { padding: 15px; border-radius: 25px; border: 1px solid #ddd; width: 100%; outline: none; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        #suggestions-list {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: white; border-radius: 15px; margin-top: 5px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-height: 250px; overflow-y: auto; z-index: 2000;
+            display: none; list-style: none;
+        }
+
+        #suggestions-list li {
+            padding: 12px 20px; cursor: pointer; text-align: left;
+            border-bottom: 1px solid #f0f0f0; transition: 0.2s;
+        }
+
+        #suggestions-list li:hover { background: #f8f9fa; color: var(--text-blue); }
+
+        /* Video Area */
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 20px; overflow: hidden; margin-top: 20px; background: #000; }
         .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
-        input { padding: 12px; border-radius: 12px; border: 1px solid #ddd; width: 100%; margin: 8px 0; outline: none; text-align: center; }
-        button { padding: 12px; border-radius: 12px; border: none; background: var(--text-blue); color: white; font-weight: bold; cursor: pointer; width: 100%; }
-        .back-btn { background: #ff7675; margin-top: 15px; }
-
-        /* Popups */
-        #popup-box { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: white; padding: 15px 30px; border-radius: 50px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); transition: 0.5s; z-index: 9000; font-weight: bold; color: #2ecc71; border: 2px solid #2ecc71; min-width: 280px; text-align: center; }
+        .section { width: 95%; max-width: 700px; margin: 60px auto; text-align: center; }
+        button { padding: 12px 25px; border-radius: 25px; border: none; background: var(--text-blue); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        #popup-box { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: white; padding: 15px 30px; border-radius: 50px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); transition: 0.5s; z-index: 9000; font-weight: bold; color: #2ecc71; border: 2px solid #2ecc71; }
         #popup-box.show { top: 30px; }
-
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 6000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--creamy-white); padding: 25px; border-radius: 25px; width: 85%; max-width: 350px; text-align: center; }
-        .rank-legendary { color: #8e44ad; animation: glow 1s infinite alternate; font-weight: bold; }
-        @keyframes glow { from { text-shadow: 0 0 5px #8e44ad; } to { text-shadow: 0 0 15px #8e44ad; } }
     </style>
 </head>
 <body>
 
     <div id="popup-box"></div>
     <div id="coin-display">✨🪙 Gold: <span id="coin-val">0</span></div>
-    <div id="achieve-btn" onclick="showAchieve()">🏆 Achievement</div>
-    <div id="cheat-btn" onclick="showCheat()">⚙️</div>
 
-    <div id="lock-screen">
-        <div class="lock-box">
-            <h2>Paradise Login</h2>
-            <input type="password" id="pass-input" placeholder="Password">
-            <button onclick="login()">Enter</button>
+    <div class="section">
+        <h1>Paradise Music</h1>
+        <p style="margin-bottom: 20px;">YouTube မှာပေါ်သလို အကြံပြုချက်များဖြင့် ရှာဖွေပါ</p>
+
+        <div class="search-container">
+            <input type="text" id="yt-search" placeholder="သီချင်းအမည်ရိုက်ပါ..." autocomplete="off">
+            <ul id="suggestions-list"></ul>
+            <button onclick="searchYT()">Search Now</button>
         </div>
-    </div>
 
-    <div id="main-menu">
-        <h1>Welcome to Paradise</h1>
-        <p id="random-greet" style="font-style: italic; color: #777;"></p>
-        <div class="menu-container">
-            <div class="menu-btn" onclick="openSection('music-ui')">🎵 Music</div>
-            <div class="menu-btn" onclick="openSection('game-ui')">🎮 Games</div>
-        </div>
-    </div>
-
-    <div id="music-ui" class="section">
-        <input type="text" id="yt-search" placeholder="ရှာဖွေလိုသော အမည်ကို ရိုက်ပါ...">
-        <button onclick="searchYT()">Search</button>
-        <div class="video-wrapper" id="player-container">
+        <div class="video-wrapper">
             <iframe id="player" src="https://www.youtube.com/embed?enablejsapi=1&listType=search&list=relaxing+music"></iframe>
-        </div>
-        <button class="back-btn" onclick="toHome()">Back</button>
-    </div>
-
-    <div id="game-ui" class="section">
-        <div id="game-select">
-            <button onclick="playMath()" style="margin-bottom:15px; background:#a1c4fd;">➕ Math Quiz</button>
-            <button onclick="playWord()" style="background:#fbc2eb; color:#444;">🔤 Guess Word</button>
-            <button class="back-btn" onclick="toHome()">Back</button>
-        </div>
-        <div id="math-box" style="display:none; background:white; padding:20px; border-radius:20px;">
-            <h2 id="m-ques"></h2>
-            <input type="number" id="m-ans" placeholder="Answer?">
-            <button onclick="checkMath()">Submit</button>
-        </div>
-        <div id="word-box" style="display:none; background:white; padding:20px; border-radius:20px;">
-            <p id="w-hint" style="color:#888; font-size:0.9rem;"></p>
-            <h1 id="w-scram" style="letter-spacing:10px; color:var(--text-blue);"></h1>
-            <input type="text" id="w-ans" placeholder="Correct word?">
-            <button onclick="checkWord()">Submit</button>
-        </div>
-    </div>
-
-    <div id="achieve-modal" class="modal">
-        <div class="modal-content">
-            <h2 id="r-name">Rank</h2>
-            <div id="r-list" style="margin-top:15px; text-align:left; padding-left:20px;"></div>
-            <button onclick="closeM('achieve-modal')" style="margin-top:15px;">Close</button>
-        </div>
-    </div>
-
-    <div id="cheat-modal" class="modal">
-        <div class="modal-content">
-            <div id="c-step1">
-                <h3>Admin Access</h3>
-                <input type="password" id="c-pass" placeholder="Secret Key">
-                <button onclick="verifyCheat()">Verify</button>
-            </div>
-            <div id="c-step2" style="display:none;">
-                <input type="number" id="c-amt" placeholder="20 - 1000">
-                <button onclick="addCheat()">Add Gold</button>
-            </div>
-            <button onclick="closeM('cheat-modal')" class="back-btn">Cancel</button>
         </div>
     </div>
 
     <script>
-        let coins = parseInt(localStorage.getItem('p_gold_new')) || 0;
-        let lastRank = "";
-        const greets = ["သူငယ်ချင်း ဒီနေ့ ပျော်နေလား? ✨", "ဒီနေရာလေးမှာ အပန်းဖြေလိုက်ပါဦး... ☁️", "Paradise မှ ကြိုဆိုပါတယ် 🌿"];
+        let coins = parseInt(localStorage.getItem('p_gold')) || 0;
+        const searchInput = document.getElementById('yt-search');
+        const suggestionsList = document.getElementById('suggestions-list');
 
-        // UI & Notifications
+        function updateUI() { document.getElementById('coin-val').innerText = coins; localStorage.setItem('p_gold', coins); }
         function showPopup(msg) {
             const p = document.getElementById('popup-box');
-            p.innerText = msg;
-            p.classList.add('show');
+            p.innerText = msg; p.classList.add('show');
             setTimeout(() => p.classList.remove('show'), 3000);
         }
 
-        function updateUI() {
-            document.getElementById('coin-val').innerText = coins;
-            localStorage.setItem('p_gold_new', coins);
-        }
-
-        function addGold(amt) {
-            coins += amt;
-            updateUI();
-            showPopup(`ဂုဏ်ယူပါတယ် သင် gold ${amt} ရပါပြီ!`);
-            checkRankUp(true);
-        }
-
-        function login() {
-            if(document.getElementById('pass-input').value === '12122026') {
-                document.getElementById('lock-screen').style.display = 'none';
-                document.getElementById('main-menu').style.display = 'flex';
-                document.querySelectorAll('#coin-display, #achieve-btn, #cheat-btn').forEach(el => el.style.display = 'block');
-                document.getElementById('random-greet').innerText = greets[Math.floor(Math.random()*greets.length)];
-                checkRankUp(false);
-                updateUI();
-            } else { alert("Incorrect Password!"); }
-        }
-
-        // Rank System
-        function getRank(c) {
-            if(c <= 200) return "Bronze";
-            if(c <= 400) return "Silver";
-            if(c <= 600) return "Gold";
-            if(c <= 800) return "VIP";
-            if(c <= 1000) return "VVIP";
-            return "Legendary";
-        }
-
-        function checkRankUp(notify) {
-            let currentRank = getRank(coins);
-            if(currentRank !== lastRank) {
-                if(notify && lastRank !== "") showPopup(`ဂုဏ်ယူပါတယ်! ${currentRank} အဆင့်သို့ရောက်ပါပြီ!`);
-                lastRank = currentRank;
+        // YouTube Suggestion API Logic
+        searchInput.addEventListener('input', function() {
+            const query = this.value;
+            if (query.length < 2) {
+                suggestionsList.style.display = 'none';
+                return;
             }
-        }
 
-        // YouTube Logic (Fixed)
+            // Google Search Suggestion API ကို JSONP ဖြင့် ခေါ်ယူခြင်း
+            const script = document.createElement('script');
+            script.src = `https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(query)}&callback=handleSuggestions`;
+            document.body.appendChild(script);
+            document.body.removeChild(script);
+        });
+
+        // API ကနေ ပြန်လာတဲ့ အချက်အလက်တွေကို List ထဲ ထည့်ခြင်း
+        window.handleSuggestions = function(data) {
+            const suggestions = data[1];
+            suggestionsList.innerHTML = '';
+            
+            if (suggestions.length > 0) {
+                suggestionsList.style.display = 'block';
+                suggestions.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerText = item[0];
+                    li.onclick = function() {
+                        searchInput.value = item[0];
+                        suggestionsList.style.display = 'none';
+                        searchYT();
+                    };
+                    suggestionsList.appendChild(li);
+                });
+            } else {
+                suggestionsList.style.display = 'none';
+            }
+        };
+
+        // အပြင်ဘက်ကို နှိပ်ရင် Suggestion List ပိတ်အောင်လုပ်ခြင်း
+        document.addEventListener('click', (e) => {
+            if (e.target !== searchInput) suggestionsList.style.display = 'none';
+        });
+
         function searchYT() {
-            let q = document.getElementById('yt-search').value;
+            let q = searchInput.value;
             if(!q) return;
-            // Search function using the search list type
-            let embedUrl = `https://www.youtube.com/embed?enablejsapi=1&listType=search&list=${encodeURIComponent(q)}&origin=${window.location.origin}`;
-            document.getElementById('player').src = embedUrl;
+            let origin = window.location.origin;
+            document.getElementById('player').src = `https://www.youtube.com/embed?enablejsapi=1&origin=${origin}&listType=search&list=${encodeURIComponent(q)}`;
+            suggestionsList.style.display = 'none';
         }
 
-        // IFrame API for Coin Reward
+        // YouTube API for Rewards
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -199,83 +144,16 @@
         var player;
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
-                events: { 'onStateChange': (e) => { if(e.data == YT.PlayerState.ENDED) addGold(50); } }
+                events: { 'onStateChange': (e) => { 
+                    if(e.data == YT.PlayerState.ENDED) {
+                        coins += 50; updateUI(); 
+                        showPopup("ဂုဏ်ယူပါတယ်! +50 Gold ရပါပြီ");
+                    } 
+                } }
             });
         }
 
-        // Games
-        let mAns, wAns;
-        function playMath() {
-            document.getElementById('game-select').style.display = 'none';
-            document.getElementById('math-box').style.display = 'block';
-            let n1 = Math.floor(Math.random()*50), n2 = Math.floor(Math.random()*50);
-            mAns = n1 + n2;
-            document.getElementById('m-ques').innerText = `${n1} + ${n2} = ?`;
-        }
-        function checkMath() {
-            if(document.getElementById('m-ans').value == mAns) { addGold(20); playMath(); }
-            document.getElementById('m-ans').value = "";
-        }
-
-        const words = [
-            {w:'galaxy', h:'ကြယ်တာရာများ စုဝေးရာ'}, {w:'soccer', h:'ကမ္ဘာ့လူကြိုက်အများဆုံး အားကစား'}, 
-            {w:'nature', h:'သစ်ပင်ပန်းမန်များနှင့် တောတောင်'}, {w:'future', h:'နောင်လာမည့် အချိန်ကာလ'},
-            {w:'island', h:'ရေပတ်လည် ဝန်းရံနေသော ကုန်းမြေ'}, {w:'camera', h:'ဓာတ်ပုံရိုက်သည့် ကိရိယာ'}
-        ];
-        function playWord() {
-            document.getElementById('game-select').style.display = 'none';
-            document.getElementById('word-box').style.display = 'block';
-            let obj = words[Math.floor(Math.random()*words.length)];
-            wAns = obj.w;
-            document.getElementById('w-hint').innerText = "Hint: " + obj.h;
-            document.getElementById('w-scram').innerText = wAns.split('').sort(()=>.5-Math.random()).join('').toUpperCase();
-        }
-        function checkWord() {
-            if(document.getElementById('w-ans').value.toLowerCase() == wAns) { addGold(20); playWord(); }
-            document.getElementById('w-ans').value = "";
-        }
-
-        function openSection(id) { document.getElementById('main-menu').style.display = 'none'; document.getElementById(id).style.display = 'block'; }
-        function toHome() {
-            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-            document.getElementById('main-menu').style.display = 'flex';
-            document.getElementById('game-select').style.display = 'block';
-            document.getElementById('math-box').style.display = 'none';
-            document.getElementById('word-box').style.display = 'none';
-        }
-
-        function showAchieve() {
-            let r = getRank(coins);
-            document.getElementById('r-name').innerText = r + " Rank";
-            document.getElementById('r-name').className = (r === "Legendary") ? "rank-legendary" : "";
-            document.getElementById('r-list').innerHTML = `
-                <div>🥉 Bronze (0-200) ${coins > 0 ? '✅' : ''}</div>
-                <div>🥈 Silver (201-400) ${coins > 200 ? '✅' : ''}</div>
-                <div>🥇 Gold (401-600) ${coins > 400 ? '✅' : ''}</div>
-                <div>💎 VIP (601-800) ${coins > 600 ? '✅' : ''}</div>
-                <div>🔥 VVIP (801-1000) ${coins > 800 ? '✅' : ''}</div>
-                <div style="color:#8e44ad">✨ Legendary (1001+) ${coins > 1000 ? '✅' : ''}</div>
-            `;
-            document.getElementById('achieve-modal').style.display = 'flex';
-        }
-
-        function showCheat() { document.getElementById('cheat-modal').style.display = 'flex'; }
-        function verifyCheat() {
-            if(document.getElementById('c-pass').value === 'htet2002') {
-                document.getElementById('c-step1').style.display = 'none';
-                document.getElementById('c-step2').style.display = 'block';
-            } else { alert("Wrong Key!"); }
-        }
-        function addCheat() {
-            let a = parseInt(document.getElementById('c-amt').value);
-            if(a >= 20 && a <= 1000) { addGold(a); closeM('cheat-modal'); }
-            else { alert("20-1000 Only!"); }
-        }
-        function closeM(id) { 
-            document.getElementById(id).style.display = 'none'; 
-            document.getElementById('c-step1').style.display = 'block';
-            document.getElementById('c-step2').style.display = 'none';
-        }
+        updateUI();
     </script>
 </body>
 </html>
